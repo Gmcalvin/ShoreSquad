@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ShoreSquad - Youth beach cleanup map for Singapore. Join the movement, protect our coasts, have fun!">
+    <meta name="theme-color" content="#2DD4BF">
+    <title>ShoreSquad - Beach Cleanup Tracker for Singapore</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%232DD4BF'/><text x='50' y='60' font-size='50' font-weight='bold' text-anchor='middle' fill='white'>S</text></svg>">
+    
+    <!-- Leaflet CSS for mapping -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjrSciIFUuxfbMg8TAB2hG5VALvIQyhedygRBmxdveKDwwz1N7+Le20oqf+ufBx38p+E5iq1CD9+V5g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Header Navigation -->
+    <header class="header" role="banner">
+        <nav class="navbar">
+            <div class="navbar-container">
+                <div class="logo">
+                    <span class="logo-icon">🌊</span>
+                    <span class="logo-text">ShoreSquad</span>
+                </div>
+                <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <ul class="nav-menu" id="nav-menu" role="navigation">
+                    <li><a href="#map-section" class="nav-link">Map</a></li>
+                    <li><a href="#stats-section" class="nav-link">Impact</a></li>
+                    <li><a href="#join-section" class="nav-link">Join Us</a></li>
+                    <li><a href="#about-section" class="nav-link">About</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section class="hero" role="region" aria-label="Hero section">
+            <div class="hero-content">
+                <h1>Clean Coasts, Big Impact</h1>
+                <p class="subtitle">Join ShoreSquad and be part of Singapore's youth beach cleanup movement</p>
+                <button class="btn btn-primary" id="hero-cta">Find Cleanups Near You</button>
+            </div>
+        </section>
+
+        <!-- Map Section -->
+        <section id="map-section" class="map-section" role="region" aria-label="Interactive beach cleanup map">
+            <div class="section-header">
+                <h2>Active Cleanup Events</h2>
+                <p class="section-subtitle">Tap a location to join or view details</p>
+            </div>
+            
+            <div class="map-container">
+                <div id="map" aria-label="Interactive map showing cleanup locations across Singapore"></div>
+                <div class="map-legend" role="contentinfo">
+                    <div class="legend-item">
+                        <span class="legend-marker" style="background-color: #2DD4BF;"></span>
+                        <span>Upcoming Event</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-marker" style="background-color: #34D399;"></span>
+                        <span>Active Event</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-marker" style="background-color: #F59E0B;"></span>
+                        <span>Completed Event</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Details Panel -->
+            <div id="event-panel" class="event-panel" hidden>
+                <button class="panel-close" id="panel-close" aria-label="Close event details panel">&times;</button>
+                <div id="event-details" class="event-details">
+                    <!-- Dynamically populated -->
+                </div>
+                <button class="btn btn-primary" id="join-event-btn">Join This Event</button>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section id="stats-section" class="stats-section" role="region" aria-label="Cleanup impact statistics">
+            <div class="section-header">
+                <h2>Our Impact</h2>
+                <p class="section-subtitle">Together, we're making Singapore's beaches cleaner</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-cleanups">0</div>
+                    <div class="stat-label">Cleanups Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-volunteers">0</div>
+                    <div class="stat-label">Volunteers Active</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-trash">0</div>
+                    <div class="stat-label">kg Trash Collected</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-streak">0</div>
+                    <div class="stat-label">Days Cleaning Streak</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- User Streak Section -->
+        <section class="streak-section" role="region" aria-label="Your cleaning streak">
+            <div class="streak-container">
+                <h3>🔥 Your Streak</h3>
+                <div id="user-streak" class="streak-display">
+                    <p>Log in to track your cleanup streak!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Join Section -->
+        <section id="join-section" class="join-section" role="region" aria-label="Join ShoreSquad">
+            <div class="section-header">
+                <h2>Ready to Make Waves?</h2>
+                <p class="section-subtitle">Sign up and start your cleanup journey today</p>
+            </div>
+            
+            <form id="signup-form" class="signup-form" novalidate>
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required aria-required="true" placeholder="Your name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required aria-required="true" placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="area">Preferred Beach Area</label>
+                    <select id="area" name="area" required aria-required="true">
+                        <option value="">Select a beach...</option>
+                        <option value="east">East Coast</option>
+                        <option value="west">West Coast</option>
+                        <option value="north">North Coast</option>
+                        <option value="south">South Coast & Islands</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-large">Join ShoreSquad</button>
+            </form>
+        </section>
+
+        <!-- About Section -->
+        <section id="about-section" class="about-section" role="region" aria-label="About ShoreSquad">
+            <div class="section-header">
+                <h2>About ShoreSquad</h2>
+            </div>
+            
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>Why ShoreSquad?</h3>
+                    <p>Singapore's beaches are facing unprecedented pollution. ShoreSquad empowers Gen-Z to take action with fun, organized cleanup events. We believe environmental action should be social, trackable, and rewarding.</p>
+                    
+                    <h3>Our Mission</h3>
+                    <p>To mobilize youth across Singapore for regular beach cleanups, building a community that cares about our coasts while having fun doing it.</p>
+                    
+                    <h3>Why Join Us?</h3>
+                    <ul>
+                        <li>🎯 Track your impact in real-time</li>
+                        <li>👥 Connect with eco-minded friends</li>
+                        <li>🏆 Earn badges and streaks</li>
+                        <li>🌍 Make measurable environmental change</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo">
+        <div class="footer-content">
+            <p>&copy; 2025 ShoreSquad. Made with <span aria-label="love">💚</span> for Singapore's coasts.</p>
+            <div class="footer-links">
+                <a href="#" aria-label="Privacy Policy">Privacy</a>
+                <a href="#" aria-label="Terms of Service">Terms</a>
+                <a href="#" aria-label="Contact Us">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" role="region" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-WXoSL2lrKOSIDlKairyqpeUI8GDeVllCQtZruZweLL2+fwA119My9hZ+PfFwPt5I41DcmmStnQpF7iUhkDsIIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="js/app.js" defer></script>
+</body>
+</html>

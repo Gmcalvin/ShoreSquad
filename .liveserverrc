@@ -1,0 +1,15 @@
+{
+  "host": "127.0.0.1",
+  "port": 8080,
+  "root": ".",
+  "ignore": "node_modules",
+  "file": "index.html",
+  "wait": 1000,
+  "mount": [["/", "."]],
+  "logLevel": 2,
+  "middleware": [
+    {
+      "default": "<current_dir>/index.html"
+    }
+  ]
+}

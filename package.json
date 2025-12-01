@@ -1,0 +1,40 @@
+{
+  "name": "shoresquad",
+  "version": "1.0.0",
+  "description": "ShoreSquad - Youth beach cleanup map app for Singapore. Join the movement, protect our coasts, have fun!",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server",
+    "dev": "live-server --port=3000",
+    "build": "echo 'ShoreSquad is a static site. No build step required.'",
+    "test": "echo 'Tests coming soon!' && exit 0"
+  },
+  "keywords": [
+    "beach cleanup",
+    "singapore",
+    "environmental",
+    "youth",
+    "eco-friendly",
+    "map",
+    "interactive"
+  ],
+  "author": "ShoreSquad Team",
+  "license": "MIT",
+  "dependencies": {
+    "leaflet": "^1.9.4"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/shoresquad.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/shoresquad/issues"
+  },
+  "homepage": "https://shoresquad.sg",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

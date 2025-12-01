@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log
+
+# OS files
+.DS_Store
+Thumbs.db
+.env.local
+.env.*.local
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.sublime-workspace
+.eslintcache
+
+# OS-specific
+.AppleDouble
+.LSOverride
+*.log
+
+# Build artifacts (if you add a build step later)
+dist/
+build/
+.cache/
+
+# Environment variables (if added in future)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor directories and files
+.DS_Store
+.history
+.vuepress/dist
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.pem
+*.key
+*.cert

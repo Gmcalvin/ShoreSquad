@@ -241,9 +241,14 @@ function formatDate(dateString) {
 // ============================================
 
 function updateStatistics() {
-    document.getElementById('stat-cleanups').textContent = APP_STATE.stats.cleanups;
-    document.getElementById('stat-volunteers').textContent = APP_STATE.stats.volunteers;
-    document.getElementById('stat-trash').textContent = APP_STATE.stats.trash;
+    // Calculate totals from all active cleanup events
+    const totalCleanups = CLEANUP_EVENTS.filter(e => e.status === 'active').length;
+    const totalVolunteers = CLEANUP_EVENTS.reduce((sum, e) => sum + e.volunteers, 0);
+    const totalTrash = CLEANUP_EVENTS.reduce((sum, e) => sum + e.trash, 0);
+    
+    document.getElementById('stat-cleanups').textContent = totalCleanups;
+    document.getElementById('stat-volunteers').textContent = totalVolunteers;
+    document.getElementById('stat-trash').textContent = totalTrash;
     document.getElementById('stat-streak').textContent = APP_STATE.user.streak;
 }
 
@@ -597,6 +602,9 @@ function getMockWeatherData() {
 function displayWeatherForecast(data) {
     const forecastContainer = document.getElementById('weather-forecast');
     if (!forecastContainer) return;
+    
+    // Clear loading message
+    forecastContainer.innerHTML = '';
     
     if (!data || !data.items || data.items.length === 0) {
         forecastContainer.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 2rem;">Weather data unavailable. Please try again later.</p>';

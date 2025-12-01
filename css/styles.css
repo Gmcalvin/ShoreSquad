@@ -626,6 +626,89 @@ section {
 }
 
 /* ===================================
+   Google Maps Section
+   =================================== */
+
+.google-maps-section {
+    background-color: var(--bg-light);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-2xl) var(--spacing-lg);
+}
+
+.google-maps-section .section-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.google-maps-section h3 {
+    color: var(--primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.maps-container {
+    background-color: var(--bg-white);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: var(--spacing-xl);
+    aspect-ratio: 16 / 9;
+    max-width: 100%;
+}
+
+.google-maps-embed {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: var(--radius-xl);
+    display: block;
+}
+
+.map-info-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    background-color: var(--bg-white);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background-color: rgba(45, 212, 191, 0.05);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary);
+}
+
+.info-icon {
+    font-size: var(--font-size-2xl);
+    flex-shrink: 0;
+}
+
+.info-content {
+    flex: 1;
+}
+
+.info-content strong {
+    display: block;
+    color: var(--primary);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-xs);
+}
+
+.info-content p {
+    color: var(--text-dark);
+    font-size: var(--font-size-base);
+    margin: 0;
+    font-weight: 500;
+}
+
+/* ===================================
    Join Section
    =================================== */
 
@@ -815,7 +898,24 @@ section {
         height: 350px;
     }
 
-    .map-legend {
+    .maps-container {
+        aspect-ratio: auto;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .google-maps-embed {
+        min-height: 300px;
+    }
+
+    .map-info-card {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .info-item {
+        padding: var(--spacing-md);
+    }
+
         bottom: var(--spacing-md);
         right: var(--spacing-md);
         padding: var(--spacing-md);

@@ -206,12 +206,11 @@ function updateMapLocation(event) {
     // Create Google Maps embed URL with the event coordinates
     const lat = event.location[0];
     const lng = event.location[1];
-    const zoom = 15;
     
-    // Google Maps embed URL format
-    const embedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d${Math.pow(2, 21-zoom)}!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s!2s${encodeURIComponent(event.name)}!5e0!3m2!1sen!2ssg!4v${Date.now()}`;
+    // Google Maps embed URL - using search parameter with location name for proper embed
+    const mapUrl = `https://www.google.com/maps?q=${lat},${lng}&hl=en&z=15&output=embed`;
     
-    mapIframe.src = embedUrl;
+    mapIframe.src = mapUrl;
 }
 
 function showEventDetails(event) {

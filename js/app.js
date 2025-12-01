@@ -487,6 +487,162 @@ function enableLocationFeatures() {
 }
 
 // ============================================
+// WEATHER API INTEGRATION (NEA 24-Hour Forecast)
+// ============================================
+
+/**
+ * Fetch real-time weather data from Singapore's NEA API
+ * API: https://api.data.gov.sg/v1/environment/24-hour-weather-forecast
+ */
+async function fetchWeatherForecast() {
+    const weatherContainer = document.getElementById('weather-section');
+    if (!weatherContainer) return;
+
+    try {
+        const response = await fetch('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        displayWeatherForecast(data);
+    } catch (error) {
+        console.error('Weather API Error:', error);
+        showToast('Unable to load weather forecast', 'error');
+        
+        // Fallback message
+        const fallbackElement = document.getElementById('weather-forecast');
+        if (fallbackElement) {
+            fallbackElement.innerHTML = '<p style="color: var(--text-light);">Weather data unavailable. Check local forecasts for cleanup conditions.</p>';
+        }
+    }
+}
+
+/**
+ * Parse and display weather forecast data
+ * Filters for beach-relevant locations: Pasir Ris, East Coast, Sentosa
+ */
+function displayWeatherForecast(data) {
+    const forecastContainer = document.getElementById('weather-forecast');
+    if (!forecastContainer || !data.items || data.items.length === 0) return;
+
+    // Extract the 24-hour forecast
+    const forecastItem = data.items[0];
+    const { valid_period, forecasts, relative_humidity, temperature } = forecastItem;
+
+    // Beach locations to highlight
+    const beachLocations = ['Pasir Ris', 'East Coast', 'Sentosa', 'Changi', 'West Coast'];
+
+    // Filter forecasts for beach areas
+    const beachForecasts = forecasts.filter(forecast =>
+        beachLocations.some(beach => forecast.name.includes(beach))
+    );
+
+    // Get temperature data
+    const tempData = temperature || [];
+
+    // Build forecast HTML
+    let forecastHTML = `
+        <div class="weather-header">
+            <h3>⛅ Singapore Beach Weather Forecast</h3>
+            <p class="weather-period">${formatWeatherPeriod(valid_period)}</p>
+        </div>
+        
+        <div class="weather-grid">
+    `;
+
+    // Add forecast cards for each beach
+    if (beachForecasts.length > 0) {
+        beachForecasts.forEach((forecast, index) => {
+            const iconEmoji = getWeatherEmoji(forecast.forecast);
+            
+            forecastHTML += `
+                <div class="weather-card">
+                    <div class="weather-location">${forecast.name}</div>
+                    <div class="weather-icon">${iconEmoji}</div>
+                    <div class="weather-condition">${forecast.forecast}</div>
+                </div>
+            `;
+        });
+    }
+
+    // Add temperature and humidity info
+    if (tempData.length > 0) {
+        const { low, high } = tempData[0];
+        forecastHTML += `
+            <div class="weather-card weather-metrics">
+                <div class="metric">
+                    <strong>High:</strong> ${high}°C
+                </div>
+                <div class="metric">
+                    <strong>Low:</strong> ${low}°C
+                </div>
+            </div>
+        `;
+    }
+
+    if (relative_humidity && relative_humidity.length > 0) {
+        const { low: rhLow, high: rhHigh } = relative_humidity[0];
+        forecastHTML += `
+            <div class="weather-card weather-metrics">
+                <div class="metric">
+                    <strong>Humidity:</strong> ${rhLow}%-${rhHigh}%
+                </div>
+            </div>
+        `;
+    }
+
+    forecastHTML += `
+        </div>
+        <p class="weather-source">Data from National Environment Agency (NEA)</p>
+    `;
+
+    forecastContainer.innerHTML = forecastHTML;
+}
+
+/**
+ * Convert forecast text to emoji representation
+ */
+function getWeatherEmoji(forecast) {
+    const text = forecast.toLowerCase();
+    
+    if (text.includes('rain')) return '🌧️';
+    if (text.includes('thundery')) return '⛈️';
+    if (text.includes('showers')) return '🌦️';
+    if (text.includes('partly cloudy')) return '⛅';
+    if (text.includes('cloudy')) return '☁️';
+    if (text.includes('fair') || text.includes('sunny')) return '☀️';
+    if (text.includes('windy')) return '💨';
+    
+    return '🌤️'; // Default
+}
+
+/**
+ * Format the valid period from NEA API (ISO 8601 format)
+ */
+function formatWeatherPeriod(validPeriod) {
+    if (!validPeriod) return 'Current Forecast';
+    
+    const start = new Date(validPeriod.start);
+    const end = new Date(validPeriod.end);
+    
+    const startStr = start.toLocaleDateString('en-SG', { 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit'
+    });
+    
+    const endStr = end.toLocaleTimeString('en-SG', { 
+        hour: '2-digit', 
+        minute: '2-digit'
+    });
+    
+    return `${startStr} to ${endStr}`;
+}
+
+// ============================================
 // ACCESSIBILITY ENHANCEMENTS
 // ============================================
 
@@ -532,6 +688,9 @@ function init() {
     // Update UI with stored data
     updateStatistics();
     updateStreakDisplay();
+
+    // Fetch weather forecast from NEA API
+    fetchWeatherForecast();
 
     // Log initialization
     console.log('ShoreSquad initialized successfully');

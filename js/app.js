@@ -747,6 +747,84 @@ function setupAccessibility() {
 }
 
 // ============================================
+// COMING SOON MODAL HANDLERS
+// ============================================
+
+/**
+ * Show Coming Soon modal
+ */
+function showComingSoonModal() {
+    const modal = document.getElementById('coming-soon-modal');
+    if (modal) {
+        modal.removeAttribute('hidden');
+    }
+}
+
+/**
+ * Close Coming Soon modal
+ */
+function closeComingSoonModal() {
+    const modal = document.getElementById('coming-soon-modal');
+    if (modal) {
+        modal.setAttribute('hidden', '');
+    }
+}
+
+/**
+ * Setup event listeners for Coming Soon features
+ */
+function setupComingSoonHandlers() {
+    // Hero CTA button
+    const heroCta = document.getElementById('hero-cta');
+    if (heroCta) {
+        heroCta.addEventListener('click', (e) => {
+            e.preventDefault();
+            showComingSoonModal();
+        });
+    }
+
+    // Join Event button
+    const joinEventBtn = document.getElementById('join-event-btn');
+    if (joinEventBtn) {
+        joinEventBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showComingSoonModal();
+        });
+    }
+
+    // Join ShoreSquad form submit
+    const signupForm = document.getElementById('signup-form');
+    if (signupForm) {
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            showComingSoonModal();
+        });
+    }
+
+    // Modal close button
+    const modalClose = document.getElementById('modal-close');
+    if (modalClose) {
+        modalClose.addEventListener('click', closeComingSoonModal);
+    }
+
+    // Modal OK button
+    const modalOkBtn = document.getElementById('modal-ok-btn');
+    if (modalOkBtn) {
+        modalOkBtn.addEventListener('click', closeComingSoonModal);
+    }
+
+    // Close modal when clicking outside of it
+    const modal = document.getElementById('coming-soon-modal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeComingSoonModal();
+            }
+        });
+    }
+}
+
+// ============================================
 // INITIALIZATION
 // ============================================
 
@@ -759,6 +837,7 @@ function init() {
     setupMobileNav();
     setupAccessibility();
     enableLocationFeatures();
+    setupComingSoonHandlers();
 
     // Update UI with stored data
     updateStatistics();

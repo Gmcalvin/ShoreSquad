@@ -96,78 +96,74 @@ const CLEANUP_EVENTS = [
 // ============================================
 
 function initMap() {
-    // Create map centered on Singapore
-    APP_STATE.map = L.map('map').setView([1.3521, 103.8198], 11);
+    // Google Maps iframe is already embedded in HTML
+    // This function handles event panel interactions for cleanup events
+    
+    // Setup event panel close button
+    const mapContainer = document.querySelector('.map-container');
+    if (mapContainer) {
+        mapContainer.addEventListener('click', (e) => {
+            // Allow legend clicks without closing panel
+            if (!e.target.closest('.map-legend')) {
+                // Can add click handlers for alternative map interactions
+            }
+        });
+    }
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 18,
-    }).addTo(APP_STATE.map);
-
-    // Add cleanup event markers
-    addCleanupMarkers();
-
-    // Handle map clicks
-    APP_STATE.map.on('click', () => {
-        document.getElementById('event-panel').hidden = true;
-    });
+    // Display available cleanup events in a list format
+    displayCleanupEventsList();
 }
 
-function addCleanupMarkers() {
+/**
+ * Display cleanup events in a list for users to browse
+ */
+function displayCleanupEventsList() {
+    const eventPanel = document.getElementById('event-panel');
+    const eventsListDiv = document.createElement('div');
+    eventsListDiv.className = 'cleanup-events-list';
+    eventsListDiv.innerHTML = '<h3 style="margin-bottom: 1rem; color: #2DD4BF;">📍 Upcoming Cleanup Events</h3>';
+    
     CLEANUP_EVENTS.forEach((event) => {
-        // Determine marker color based on status
-        const markerColor =
-            event.status === 'active' ? '#34D399' :
-            event.status === 'upcoming' ? '#2DD4BF' : '#F59E0B';
-
-        // Create custom marker HTML
-        const markerElement = document.createElement('div');
-        markerElement.style.cssText = `
-            width: 32px;
-            height: 32px;
-            background-color: ${markerColor};
-            border: 3px solid white;
-            border-radius: 50%;
+        const eventCard = document.createElement('div');
+        eventCard.className = 'event-card';
+        eventCard.style.cssText = `
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid ${event.status === 'active' ? '#34D399' : '#2DD4BF'};
+            background-color: rgba(45, 212, 191, 0.05);
+            border-radius: 0.5rem;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
         `;
-        markerElement.textContent = '🌊';
-
-        // Add hover effects
-        markerElement.addEventListener('mouseenter', () => {
-            markerElement.style.transform = 'scale(1.2)';
-            markerElement.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
-        });
-
-        markerElement.addEventListener('mouseleave', () => {
-            markerElement.style.transform = 'scale(1)';
-            markerElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-        });
-
-        // Create marker
-        const marker = L.marker(event.location, {
-            icon: L.divIcon({
-                html: markerElement,
-                iconSize: [32, 32],
-                className: 'cleanup-marker',
-            }),
-        }).addTo(APP_STATE.map);
-
-        // Add click handler to show event details
-        marker.on('click', () => {
+        
+        eventCard.innerHTML = `
+            <div style="font-weight: 600; color: #1F2937;">${event.name}</div>
+            <div style="font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem;">
+                📅 ${event.date} at ${event.time} | 👥 ${event.volunteers} volunteers
+            </div>
+            <div style="font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem;">
+                🗑️ ${event.trash > 0 ? event.trash + ' kg collected' : 'Upcoming cleanup'}
+            </div>
+        `;
+        
+        eventCard.addEventListener('click', () => {
             showEventDetails(event);
-            markerElement.style.zIndex = 1000;
         });
-
-        APP_STATE.markers.push(marker);
+        
+        eventCard.addEventListener('mouseenter', () => {
+            eventCard.style.backgroundColor = 'rgba(45, 212, 191, 0.15)';
+            eventCard.style.transform = 'translateX(4px)';
+        });
+        
+        eventCard.addEventListener('mouseleave', () => {
+            eventCard.style.backgroundColor = 'rgba(45, 212, 191, 0.05)';
+            eventCard.style.transform = 'translateX(0)';
+        });
+        
+        eventsListDiv.appendChild(eventCard);
     });
+    
+    // Add to a designated area or keep in event panel
 }
 
 function showEventDetails(event) {

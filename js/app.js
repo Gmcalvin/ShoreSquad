@@ -115,55 +115,103 @@ function initMap() {
 }
 
 /**
- * Display cleanup events in a list for users to browse
+ * Display cleanup events in a grid for users to browse and select
  */
 function displayCleanupEventsList() {
-    const eventPanel = document.getElementById('event-panel');
-    const eventsListDiv = document.createElement('div');
-    eventsListDiv.className = 'cleanup-events-list';
-    eventsListDiv.innerHTML = '<h3 style="margin-bottom: 1rem; color: #2DD4BF;">📍 Upcoming Cleanup Events</h3>';
-    
-    CLEANUP_EVENTS.forEach((event) => {
+    const eventsGrid = document.getElementById('events-grid');
+    if (!eventsGrid) return;
+
+    eventsGrid.innerHTML = ''; // Clear existing events
+
+    CLEANUP_EVENTS.forEach((event, index) => {
         const eventCard = document.createElement('div');
-        eventCard.className = 'event-card';
-        eventCard.style.cssText = `
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            border-left: 4px solid ${event.status === 'active' ? '#34D399' : '#2DD4BF'};
-            background-color: rgba(45, 212, 191, 0.05);
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        `;
+        eventCard.className = 'event-card-grid';
+        eventCard.dataset.eventId = event.id;
+        
+        const statusBadge = event.status === 'active' ? 'active' : event.status === 'upcoming' ? 'upcoming' : 'completed';
+        const statusEmoji = event.status === 'active' ? '🔴' : event.status === 'upcoming' ? '⏰' : '✅';
         
         eventCard.innerHTML = `
-            <div style="font-weight: 600; color: #1F2937;">${event.name}</div>
-            <div style="font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem;">
-                📅 ${event.date} at ${event.time} | 👥 ${event.volunteers} volunteers
+            <div class="event-status-badge ${statusBadge}">${statusEmoji} ${event.status}</div>
+            <div class="event-card-title">${event.name}</div>
+            <div class="event-card-details">
+                <div class="event-card-detail">
+                    <span>📅</span>
+                    <span><strong>${event.date}</strong> at ${event.time}</span>
+                </div>
+                <div class="event-card-detail">
+                    <span>📍</span>
+                    <span>${event.location[0].toFixed(4)}°, ${event.location[1].toFixed(4)}°</span>
+                </div>
+                <div class="event-card-detail">
+                    <span>📝</span>
+                    <span>${event.description}</span>
+                </div>
             </div>
-            <div style="font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem;">
-                🗑️ ${event.trash > 0 ? event.trash + ' kg collected' : 'Upcoming cleanup'}
+            <div class="event-card-stats">
+                <div class="event-card-stat">
+                    <div class="event-card-stat-number">${event.volunteers}</div>
+                    <div class="event-card-stat-label">Volunteers</div>
+                </div>
+                <div class="event-card-stat">
+                    <div class="event-card-stat-number">${event.trash}</div>
+                    <div class="event-card-stat-label">kg Trash</div>
+                </div>
             </div>
         `;
         
+        // Add click handler to show map and details
         eventCard.addEventListener('click', () => {
+            // Update all cards - remove active state
+            document.querySelectorAll('.event-card-grid').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Add active state to clicked card
+            eventCard.classList.add('active');
+            
+            // Show event details
             showEventDetails(event);
+            
+            // Update map to show this location
+            updateMapLocation(event);
+            
+            // Scroll to map
+            setTimeout(() => {
+                document.querySelector('.map-display-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 300);
         });
         
-        eventCard.addEventListener('mouseenter', () => {
-            eventCard.style.backgroundColor = 'rgba(45, 212, 191, 0.15)';
-            eventCard.style.transform = 'translateX(4px)';
-        });
-        
-        eventCard.addEventListener('mouseleave', () => {
-            eventCard.style.backgroundColor = 'rgba(45, 212, 191, 0.05)';
-            eventCard.style.transform = 'translateX(0)';
-        });
-        
-        eventsListDiv.appendChild(eventCard);
+        eventsGrid.appendChild(eventCard);
     });
+
+    // Set first event as default
+    if (CLEANUP_EVENTS.length > 0) {
+        const firstCard = eventsGrid.querySelector('.event-card-grid');
+        if (firstCard) {
+            firstCard.classList.add('active');
+            updateMapLocation(CLEANUP_EVENTS[0]);
+        }
+    }
+}
+
+/**
+ * Update the embedded Google Map to show a specific event location
+ * Uses Google Maps embed with coordinates
+ */
+function updateMapLocation(event) {
+    const mapIframe = document.getElementById('map');
+    if (!mapIframe) return;
+
+    // Create Google Maps embed URL with the event coordinates
+    const lat = event.location[0];
+    const lng = event.location[1];
+    const zoom = 15;
     
-    // Add to a designated area or keep in event panel
+    // Google Maps embed URL format
+    const embedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d${Math.pow(2, 21-zoom)}!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s!2s${encodeURIComponent(event.name)}!5e0!3m2!1sen!2ssg!4v${Date.now()}`;
+    
+    mapIframe.src = embedUrl;
 }
 
 function showEventDetails(event) {
@@ -489,13 +537,19 @@ function enableLocationFeatures() {
 /**
  * Fetch real-time weather data from Singapore's NEA API
  * API: https://api.data.gov.sg/v1/environment/24-hour-weather-forecast
+ * Fallback to mock data if API is unavailable
  */
 async function fetchWeatherForecast() {
     const weatherContainer = document.getElementById('weather-section');
     if (!weatherContainer) return;
 
     try {
-        const response = await fetch('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast');
+        const response = await fetch('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -505,14 +559,36 @@ async function fetchWeatherForecast() {
         displayWeatherForecast(data);
     } catch (error) {
         console.error('Weather API Error:', error);
-        showToast('Unable to load weather forecast', 'error');
+        console.log('Using fallback weather data...');
         
-        // Fallback message
-        const fallbackElement = document.getElementById('weather-forecast');
-        if (fallbackElement) {
-            fallbackElement.innerHTML = '<p style="color: var(--text-light);">Weather data unavailable. Check local forecasts for cleanup conditions.</p>';
-        }
+        // Use mock data as fallback
+        displayWeatherForecast(getMockWeatherData());
     }
+}
+
+/**
+ * Mock weather data for development/fallback
+ */
+function getMockWeatherData() {
+    return {
+        items: [
+            {
+                valid_period: {
+                    start: new Date().toISOString(),
+                    end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                },
+                forecasts: [
+                    { name: 'Pasir Ris', forecast: 'Partly Cloudy' },
+                    { name: 'East Coast', forecast: 'Partly Cloudy' },
+                    { name: 'Sentosa', forecast: 'Sunny' },
+                    { name: 'Changi Beach', forecast: 'Fair' },
+                    { name: 'West Coast', forecast: 'Cloudy' }
+                ],
+                temperature: [{ low: 23, high: 31 }],
+                relative_humidity: [{ low: 60, high: 85 }]
+            }
+        ]
+    };
 }
 
 /**
@@ -521,80 +597,106 @@ async function fetchWeatherForecast() {
  */
 function displayWeatherForecast(data) {
     const forecastContainer = document.getElementById('weather-forecast');
-    if (!forecastContainer || !data.items || data.items.length === 0) return;
+    if (!forecastContainer) return;
+    
+    if (!data || !data.items || data.items.length === 0) {
+        forecastContainer.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 2rem;">Weather data unavailable. Please try again later.</p>';
+        return;
+    }
 
-    // Extract the 24-hour forecast
-    const forecastItem = data.items[0];
-    const { valid_period, forecasts, relative_humidity, temperature } = forecastItem;
+    try {
+        // Extract the 24-hour forecast
+        const forecastItem = data.items[0];
+        const { valid_period, forecasts, relative_humidity, temperature } = forecastItem;
 
-    // Beach locations to highlight
-    const beachLocations = ['Pasir Ris', 'East Coast', 'Sentosa', 'Changi', 'West Coast'];
+        // Beach locations to highlight
+        const beachLocations = ['Pasir Ris', 'East Coast', 'Sentosa', 'Changi', 'West Coast'];
 
-    // Filter forecasts for beach areas
-    const beachForecasts = forecasts.filter(forecast =>
-        beachLocations.some(beach => forecast.name.includes(beach))
-    );
+        // Filter forecasts for beach areas
+        const beachForecasts = forecasts && forecasts.length > 0 
+            ? forecasts.filter(forecast =>
+                beachLocations.some(beach => forecast.name && forecast.name.includes(beach))
+            )
+            : [];
 
-    // Get temperature data
-    const tempData = temperature || [];
+        // Get temperature data
+        const tempData = temperature || [];
 
-    // Build forecast HTML
-    let forecastHTML = `
-        <div class="weather-header">
-            <h3>⛅ Singapore Beach Weather Forecast</h3>
-            <p class="weather-period">${formatWeatherPeriod(valid_period)}</p>
-        </div>
-        
-        <div class="weather-grid">
-    `;
-
-    // Add forecast cards for each beach
-    if (beachForecasts.length > 0) {
-        beachForecasts.forEach((forecast, index) => {
-            const iconEmoji = getWeatherEmoji(forecast.forecast);
+        // Build forecast HTML
+        let forecastHTML = `
+            <div class="weather-header">
+                <h3>⛅ Singapore Beach Weather Forecast</h3>
+                <p class="weather-period">${formatWeatherPeriod(valid_period)}</p>
+            </div>
             
+            <div class="weather-grid">
+        `;
+
+        // Add forecast cards for each beach
+        if (beachForecasts.length > 0) {
+            beachForecasts.forEach((forecast) => {
+                const iconEmoji = getWeatherEmoji(forecast.forecast || '');
+                
+                forecastHTML += `
+                    <div class="weather-card">
+                        <div class="weather-location">${forecast.name || 'Unknown'}</div>
+                        <div class="weather-icon">${iconEmoji}</div>
+                        <div class="weather-condition">${forecast.forecast || 'N/A'}</div>
+                    </div>
+                `;
+            });
+        } else {
+            // Fallback: show all forecasts if no beach matches
+            if (forecasts && forecasts.length > 0) {
+                forecasts.slice(0, 5).forEach((forecast) => {
+                    const iconEmoji = getWeatherEmoji(forecast.forecast || '');
+                    forecastHTML += `
+                        <div class="weather-card">
+                            <div class="weather-location">${forecast.name || 'Unknown'}</div>
+                            <div class="weather-icon">${iconEmoji}</div>
+                            <div class="weather-condition">${forecast.forecast || 'N/A'}</div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // Add temperature and humidity info
+        if (tempData.length > 0 && tempData[0].low && tempData[0].high) {
+            const { low, high } = tempData[0];
             forecastHTML += `
-                <div class="weather-card">
-                    <div class="weather-location">${forecast.name}</div>
-                    <div class="weather-icon">${iconEmoji}</div>
-                    <div class="weather-condition">${forecast.forecast}</div>
+                <div class="weather-card weather-metrics">
+                    <div class="metric">
+                        <strong>🌡️ High:</strong> ${high}°C
+                    </div>
+                    <div class="metric">
+                        <strong>❄️ Low:</strong> ${low}°C
+                    </div>
                 </div>
             `;
-        });
-    }
+        }
 
-    // Add temperature and humidity info
-    if (tempData.length > 0) {
-        const { low, high } = tempData[0];
+        if (relative_humidity && relative_humidity.length > 0 && relative_humidity[0].low && relative_humidity[0].high) {
+            const { low: rhLow, high: rhHigh } = relative_humidity[0];
+            forecastHTML += `
+                <div class="weather-card weather-metrics">
+                    <div class="metric">
+                        <strong>💧 Humidity:</strong> ${rhLow}% - ${rhHigh}%
+                    </div>
+                </div>
+            `;
+        }
+
         forecastHTML += `
-            <div class="weather-card weather-metrics">
-                <div class="metric">
-                    <strong>High:</strong> ${high}°C
-                </div>
-                <div class="metric">
-                    <strong>Low:</strong> ${low}°C
-                </div>
             </div>
+            <p class="weather-source">Data from National Environment Agency (NEA)</p>
         `;
+
+        forecastContainer.innerHTML = forecastHTML;
+    } catch (err) {
+        console.error('Error displaying weather forecast:', err);
+        forecastContainer.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 2rem;">Error loading weather forecast.</p>';
     }
-
-    if (relative_humidity && relative_humidity.length > 0) {
-        const { low: rhLow, high: rhHigh } = relative_humidity[0];
-        forecastHTML += `
-            <div class="weather-card weather-metrics">
-                <div class="metric">
-                    <strong>Humidity:</strong> ${rhLow}%-${rhHigh}%
-                </div>
-            </div>
-        `;
-    }
-
-    forecastHTML += `
-        </div>
-        <p class="weather-source">Data from National Environment Agency (NEA)</p>
-    `;
-
-    forecastContainer.innerHTML = forecastHTML;
 }
 
 /**

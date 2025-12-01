@@ -614,85 +614,55 @@ function displayWeatherForecast(data) {
     try {
         // Extract the 24-hour forecast
         const forecastItem = data.items[0];
-        const { valid_period, forecasts, relative_humidity, temperature } = forecastItem;
+        const { valid_period, forecasts } = forecastItem;
 
-        // Beach locations to highlight
-        const beachLocations = ['Pasir Ris', 'East Coast', 'Sentosa', 'Changi', 'West Coast'];
+        // Regional weather mapping
+        const regionMap = {
+            'East': ['East Coast', 'Changi', 'Eastern'],
+            'West': ['West Coast', 'Jurong', 'Western'],
+            'North': ['Sembawang', 'Yishun', 'Northern', 'North'],
+            'South': ['Sentosa', 'Southern', 'South', 'Raffles']
+        };
 
-        // Filter forecasts for beach areas
-        const beachForecasts = forecasts && forecasts.length > 0 
-            ? forecasts.filter(forecast =>
-                beachLocations.some(beach => forecast.name && forecast.name.includes(beach))
-            )
-            : [];
+        // Get forecasts for each region
+        const regionalForecasts = {};
+        Object.keys(regionMap).forEach(region => {
+            regionalForecasts[region] = null;
+            if (forecasts && forecasts.length > 0) {
+                const found = forecasts.find(f => 
+                    regionMap[region].some(keyword => f.name && f.name.includes(keyword))
+                );
+                if (found) {
+                    regionalForecasts[region] = found;
+                }
+            }
+        });
 
-        // Get temperature data
-        const tempData = temperature || [];
-
-        // Build forecast HTML
+        // Build forecast HTML with just 4 regions
         let forecastHTML = `
             <div class="weather-header">
-                <h3>⛅ Singapore Beach Weather Forecast</h3>
+                <h3>⛅ Singapore Weather Forecast</h3>
                 <p class="weather-period">${formatWeatherPeriod(valid_period)}</p>
             </div>
             
             <div class="weather-grid">
         `;
 
-        // Add forecast cards for each beach
-        if (beachForecasts.length > 0) {
-            beachForecasts.forEach((forecast) => {
-                const iconEmoji = getWeatherEmoji(forecast.forecast || '');
-                
-                forecastHTML += `
-                    <div class="weather-card">
-                        <div class="weather-location">${forecast.name || 'Unknown'}</div>
-                        <div class="weather-icon">${iconEmoji}</div>
-                        <div class="weather-condition">${forecast.forecast || 'N/A'}</div>
-                    </div>
-                `;
-            });
-        } else {
-            // Fallback: show all forecasts if no beach matches
-            if (forecasts && forecasts.length > 0) {
-                forecasts.slice(0, 5).forEach((forecast) => {
-                    const iconEmoji = getWeatherEmoji(forecast.forecast || '');
-                    forecastHTML += `
-                        <div class="weather-card">
-                            <div class="weather-location">${forecast.name || 'Unknown'}</div>
-                            <div class="weather-icon">${iconEmoji}</div>
-                            <div class="weather-condition">${forecast.forecast || 'N/A'}</div>
-                        </div>
-                    `;
-                });
-            }
-        }
-
-        // Add temperature and humidity info
-        if (tempData.length > 0 && tempData[0].low && tempData[0].high) {
-            const { low, high } = tempData[0];
+        // Add cards for the 4 main regions
+        const regions = ['North', 'South', 'East', 'West'];
+        regions.forEach(region => {
+            const forecast = regionalForecasts[region];
+            const condition = forecast ? forecast.forecast : 'Fair';
+            const iconEmoji = getWeatherEmoji(condition);
+            
             forecastHTML += `
-                <div class="weather-card weather-metrics">
-                    <div class="metric">
-                        <strong>🌡️ High:</strong> ${high}°C
-                    </div>
-                    <div class="metric">
-                        <strong>❄️ Low:</strong> ${low}°C
-                    </div>
+                <div class="weather-card">
+                    <div class="weather-location">${region} Coast</div>
+                    <div class="weather-icon">${iconEmoji}</div>
+                    <div class="weather-condition">${condition}</div>
                 </div>
             `;
-        }
-
-        if (relative_humidity && relative_humidity.length > 0 && relative_humidity[0].low && relative_humidity[0].high) {
-            const { low: rhLow, high: rhHigh } = relative_humidity[0];
-            forecastHTML += `
-                <div class="weather-card weather-metrics">
-                    <div class="metric">
-                        <strong>💧 Humidity:</strong> ${rhLow}% - ${rhHigh}%
-                    </div>
-                </div>
-            `;
-        }
+        });
 
         forecastHTML += `
             </div>
